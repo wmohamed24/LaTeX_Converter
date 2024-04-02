@@ -59,7 +59,9 @@ To set up the Flask backend:
     ```bash
     pip install -r requirements.txt
     ```
-4. Start the Flask development server:
+4. Create a .env file and add GEMINI_API_KEY=<YOUR_API_KEY>
+
+5. Start the Flask development server:
     ```bash
     python app.py
     ```
