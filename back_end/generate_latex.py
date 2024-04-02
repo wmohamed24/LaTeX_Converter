@@ -1,10 +1,15 @@
 
 import google.generativeai as genai
+from dotenv import load_dotenv
+import os
+
 
 
 def generate_latex(instructions, file_contnent):
-
-    genai.configure(api_key='AIzaSyA0ruF9Sx6xGPYFYBYjtFmSbGqGFPkdm6U')
+    
+    load_dotenv()  # Take environment variables from .env.
+    api_key = os.getenv('GEMINI_API_KEY')
+    genai.configure(api_key=api_key)
     
     model = genai.GenerativeModel('gemini-pro')
     if instructions:
