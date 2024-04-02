@@ -55,6 +55,7 @@ const UploadForm: React.FC = () => {
         height: "100vh",
         width: "80%",
         padding: "10px",
+        marginTop: "10%",
       }}
       onFinish={onFinish}
     >
