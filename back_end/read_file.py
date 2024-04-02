@@ -28,7 +28,6 @@ def handle_txt(file):
     return file.read().decode('utf-8')
 
 def read_file(file, extension):
-
     if extension == ".pdf":
         return handle_pdf(file)
     elif extension == ".docx":
