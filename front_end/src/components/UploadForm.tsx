@@ -1,9 +1,6 @@
-import { Button, Form, Input } from "antd";
-import { InboxOutlined } from "@ant-design/icons";
-import Dragger from "antd/es/upload/Dragger";
-import type { UploadProps } from "antd";
-import { message } from "antd";
-import { useState } from "react";
+import React, { useState } from "react";
+import { Button, Form, Input, notification } from "antd";
+import FileUploader from "./FileUploader"; // Adjust the import path as necessary
 
 const { TextArea } = Input;
 
@@ -12,47 +9,20 @@ interface FormValues {
   upload: { originFileObj: File }[];
 }
 
-const normFile = (e: any) => {
-  console.log(`e: ${e.fileList}`);
-  if (Array.isArray(e)) {
-    return e;
-  }
-  return e?.fileList;
-};
-
-const dragger_props: UploadProps = {
-  name: "file",
-  listType: "picture",
-  accept: ".pdf, .docx, .txt",
-  maxCount: 1,
-  onChange(info) {
-    const { status } = info.file;
-    if (status === "done") {
-      console.log(info.file);
-      message.success(`${info.file.name} file uploaded successfully.`);
-    } else if (status === "error") {
-      message.error(`${info.file.name} file upload failed.`);
-    }
-  },
-  onDrop(e) {
-    console.log("Dropped files", e.dataTransfer.files);
-  },
-};
-
-function UploadForm() {
+const UploadForm: React.FC = () => {
   const [fileUpload, setFile] = useState<File | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+
+  const handleFileListChange = (files: File[]) => {
+    setFile(files.length > 0 ? files[0] : null);
+  };
 
   const onFinish = async (values: FormValues) => {
-    // Assuming `values.upload` contains file information like URLs or identifiers
+    setIsLoading(true); // Start loading
     const form_data = new FormData();
     form_data.append("instructions", values.instructions);
-    fileUpload && form_data.append("files", fileUpload);
-    for (let [key, value] of form_data.entries()) {
-      console.log(`${key}: ${value}`);
-      if (key === "files") {
-        console.log(value);
-      }
-    }
+    if (fileUpload) form_data.append("files", fileUpload);
+
     try {
       const response = await fetch("http://127.0.0.1:8080/process_input", {
         method: "POST",
@@ -62,9 +32,20 @@ function UploadForm() {
       if (!response.ok) throw new Error("Network response was not ok.");
 
       const data = await response.json();
+      if (data.status === "success") {
+        window.location.href = "http://127.0.0.1:8080/download/temp.tex";
+      }
       console.log("Submission successful", data);
     } catch (error) {
       console.error("Submission failed", error);
+      notification.error({
+        message: "Conversion Failed",
+        description:
+          "There was an error processing your request. Please try again.",
+        placement: "topRight", // This controls where on the screen the notification appears
+      });
+    } finally {
+      setIsLoading(false); // End loading
     }
   };
 
@@ -81,41 +62,25 @@ function UploadForm() {
         <TextArea rows={6} placeholder="Add any instructions here!" />
       </Form.Item>
 
-      <Form.Item
-        name="upload"
-        valuePropName="fileList"
-        getValueFromEvent={normFile}
-      >
-        <Dragger
-          {...dragger_props}
-          customRequest={({ file, onSuccess }: any) => {
-            setFile(file);
-            setTimeout(() => {
-              onSuccess("ok");
-            }, 0);
-          }}
-        >
-          <p className="ant-upload-drag-icon">
-            <InboxOutlined />
-          </p>
-          <p className="ant-upload-text">
-            Click or drag file to this area to upload
-          </p>
-        </Dragger>
+      <Form.Item name="upload">
+        <FileUploader
+          setFile={setFile}
+          onFileListChange={handleFileListChange}
+        />
       </Form.Item>
 
       <Form.Item>
         <Button
           type="primary"
           htmlType="submit"
-          className="login-form-button"
           block
+          loading={isLoading} // Pass the isLoading state to the loading prop
         >
           Convert To LaTeX
         </Button>
       </Form.Item>
     </Form>
   );
-}
+};
 
 export default UploadForm;
